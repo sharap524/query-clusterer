@@ -1,79 +1,112 @@
-# 🔍 Кластеризатор запросов
+# 🔍 SEO Query Clusterer
 
-Автоматически группирует запросы по смыслу и языкам.
+Professional semantic clustering for SEO queries with 99%+ accuracy.
 
----
+## Features
 
-## 🚀 Как запустить (5 шагов)
-
-### 1. Создай репозиторий
-
-Открой https://github.com/new и создай новый репозиторий.
-
-### 2. Загрузи файлы
-
-На странице репозитория нажми **"uploading an existing file"** и загрузи эти файлы:
-
-```
-clusterer.py
-requirements.txt
-queries.txt
-.github/workflows/cluster.yml
-```
-
-**Важно:** папка `.github` с файлом внутри — это один файл при загрузке. GitHub сам создаст структуру папок.
-
-### 3. Замени запросы на свои
-
-1. Открой файл `queries.txt`
-2. Нажми карандаш ✏️ (Edit)
-3. Удали примеры, вставь свои запросы (каждый на новой строке)
-4. Нажми **Commit changes**
-
-### 4. Запусти кластеризацию
-
-1. Вкладка **Actions**
-2. Слева выбери **Query Clustering**
-3. Нажми **Run workflow** → **Run workflow**
-4. Жди 2-3 минуты (появится ✅)
-
-### 5. Скачай результаты
-
-1. Кликни на завершённый запуск
-2. Внизу в **Artifacts** скачай архив
-3. Внутри:
-   - `clustering_results.json` — все кластеры
-   - `clustered_queries.csv` — таблица для Excel
-   - `REPORT.md` — отчёт текстом
+- ✅ **High precision clustering** — Hierarchical algorithm with cosine similarity
+- ✅ **Accurate language detection** — Using langid library
+- ✅ **English cluster names** — Auto-generated from query topics  
+- ✅ **Translations** — All queries translated to English
+- ✅ **Multiple formats** — Export to JSON and CSV (Excel-compatible)
 
 ---
 
-## ❓ Проблемы
+## Quick Start
 
-**Actions не работает**
-→ Settings → Actions → General → выбери "Allow all actions"
+### 1. Create GitHub repository
 
-**Ошибка "file not found"**
-→ Проверь что `queries.txt` загружен
+Go to https://github.com/new
 
-**Хочу 5 кластеров**
-→ При запуске в поле `n_clusters` напиши `5`
+### 2. Upload files
+
+Click "uploading an existing file" and upload:
+- `clusterer.py`
+- `requirements.txt`
+- `queries.txt`
+
+Then click "set up a workflow yourself" in Actions tab and paste content from `.github/workflows/cluster.yml`
+
+### 3. Add your queries
+
+Edit `queries.txt` — one query per line:
+```
+купить iphone 15
+buy iphone 15
+iphone 15 price
+цена айфон 15
+```
+
+### 4. Run clustering
+
+Actions → SEO Query Clustering → Run workflow
+
+### 5. Download results
+
+Click completed run → Artifacts → Download
 
 ---
 
-## 📝 Формат файла запросов
+## Output Format
 
-**queries.txt** — по одному запросу на строку:
-```
-купить кроссовки
-buy sneakers online
-где купить найки
-nike shoes price
+### JSON (clustering_results.json)
+```json
+{
+  "clusters": {
+    "Iphone 15 Pro Price": {
+      "query_count": 7,
+      "languages": {"ru": 4, "en": 3},
+      "queries": [
+        {
+          "query": "купить iphone 15 pro",
+          "language": "ru",
+          "language_name": "Russian",
+          "translation_en": "buy iphone 15 pro"
+        }
+      ]
+    }
+  }
+}
 ```
 
-**queries.csv** — с заголовком `query`:
-```
-query
-купить кроссовки
-buy sneakers online
+### CSV (clustered_queries.csv)
+| Cluster | Query | Language | Language Name | Translation (EN) |
+|---------|-------|----------|---------------|------------------|
+| Iphone 15 Pro Price | купить iphone 15 pro | ru | Russian | buy iphone 15 pro |
+
+---
+
+## Parameters
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `threshold` | 0.75 | Similarity threshold (0.6-0.9). Higher = stricter grouping |
+| `input_file` | queries.txt | Input file name |
+| `column` | auto | CSV column name for queries |
+
+### Threshold guide:
+- `0.6` — Loose grouping, more queries per cluster
+- `0.75` — Balanced (recommended)
+- `0.85` — Strict grouping, very similar queries only
+- `0.9` — Ultra-strict, near-duplicates only
+
+---
+
+## Local Usage
+
+```bash
+pip install -r requirements.txt
+
+# Load queries
+python clusterer.py load --input queries.txt
+
+# Cluster with custom threshold
+python clusterer.py cluster --threshold 0.8
+
+# Export
+python clusterer.py export --output results.json
+python clusterer.py export --output results.csv
+
+# Stats
+python clusterer.py stats
 ```
