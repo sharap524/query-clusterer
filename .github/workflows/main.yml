@@ -1,0 +1,70 @@
+name: Query Clustering
+
+on:
+  workflow_dispatch:
+    inputs:
+      input_file:
+        description: 'Файл с запросами'
+        required: false
+        default: 'queries.txt'
+      n_clusters:
+        description: 'Количество кластеров (пусто = авто)'
+        required: false
+        default: ''
+      algorithm:
+        description: 'Алгоритм'
+        required: false
+        default: 'kmeans'
+        type: choice
+        options:
+          - kmeans
+          - dbscan
+
+jobs:
+  cluster:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      
+      - name: Load and cluster
+        run: |
+          INPUT_FILE="${{ github.event.inputs.input_file || 'queries.txt' }}"
+          N_CLUSTERS="${{ github.event.inputs.n_clusters }}"
+          ALGORITHM="${{ github.event.inputs.algorithm || 'kmeans' }}"
+          
+          if [[ "$INPUT_FILE" == *.csv ]]; then
+            python clusterer.py load-csv --input "$INPUT_FILE"
+          else
+            python clusterer.py load-txt --input "$INPUT_FILE"
+          fi
+          
+          ARGS="--algorithm $ALGORITHM"
+          if [ -n "$N_CLUSTERS" ]; then
+            ARGS="$ARGS --n-clusters $N_CLUSTERS"
+          fi
+          
+          python clusterer.py cluster $ARGS
+      
+      - name: Export results
+        run: |
+          python clusterer.py export --output clustering_results.json
+          python clusterer.py export --output clustered_queries.csv
+      
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: clustering-results
+          path: |
+            clustering_results.json
+            clustered_queries.csv
