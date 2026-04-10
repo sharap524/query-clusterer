@@ -1,24 +1,16 @@
-name: Query Clustering
+name: SEO Query Clustering
 
 on:
   workflow_dispatch:
     inputs:
       input_file:
-        description: 'Файл с запросами'
+        description: 'Input file'
         required: false
         default: 'queries.txt'
-      n_clusters:
-        description: 'Количество кластеров (пусто = авто)'
+      threshold:
+        description: 'Similarity threshold (0.6-0.9)'
         required: false
-        default: ''
-      algorithm:
-        description: 'Алгоритм'
-        required: false
-        default: 'kmeans'
-        type: choice
-        options:
-          - kmeans
-          - dbscan
+        default: '0.75'
 
 jobs:
   cluster:
@@ -39,22 +31,8 @@ jobs:
       
       - name: Load and cluster
         run: |
-          INPUT_FILE="${{ github.event.inputs.input_file || 'queries.txt' }}"
-          N_CLUSTERS="${{ github.event.inputs.n_clusters }}"
-          ALGORITHM="${{ github.event.inputs.algorithm || 'kmeans' }}"
-          
-          if [[ "$INPUT_FILE" == *.csv ]]; then
-            python clusterer.py load-csv --input "$INPUT_FILE"
-          else
-            python clusterer.py load-txt --input "$INPUT_FILE"
-          fi
-          
-          ARGS="--algorithm $ALGORITHM"
-          if [ -n "$N_CLUSTERS" ]; then
-            ARGS="$ARGS --n-clusters $N_CLUSTERS"
-          fi
-          
-          python clusterer.py cluster $ARGS
+          python clusterer.py load --input "${{ github.event.inputs.input_file || 'queries.txt' }}"
+          python clusterer.py cluster --threshold "${{ github.event.inputs.threshold || '0.75' }}"
       
       - name: Export results
         run: |
@@ -64,7 +42,8 @@ jobs:
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
-          name: clustering-results
+          name: seo-clustering-results
           path: |
             clustering_results.json
             clustered_queries.csv
+          retention-days: 30
