@@ -1,0 +1,62 @@
+name: SEO Query Clustering
+
+on:
+  workflow_dispatch:
+    inputs:
+      threshold:
+        description: "Similarity threshold (0.6–0.9)"
+        required: false
+        default: "0.75"
+      input_file:
+        description: "Input file name"
+        required: false
+        default: "queries.txt"
+
+jobs:
+  cluster:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Cache sentence-transformers model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/torch/sentence_transformers
+          key: st-paraphrase-multilingual-mpnet-base-v2
+
+      - name: Cache Claude translations
+        uses: actions/cache@v4
+        with:
+          path: translations.db
+          key: claude-cache-${{ hashFiles(inputs.input_file) }}
+          restore-keys: |
+            claude-cache-
+
+      - name: Run full pipeline
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python clusterer.py all \
+            --input "${{ inputs.input_file }}" \
+            --threshold "${{ inputs.threshold }}" \
+            --output clustering_results.json
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: clustering-results
+          path: |
+            clustering_results.json
+            clustering_results.csv
+            seo_queries.db
