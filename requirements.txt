@@ -1,14 +1,14 @@
-# SEO Query Clusterer - Dependencies
+# SEO Query Clusterer v2 - Dependencies
 
-# Best multilingual embedding model
+# Multilingual embeddings
 sentence-transformers>=2.2.0
 
 # ML clustering
 scikit-learn>=1.3.0
 numpy>=1.24.0
 
-# Accurate language detection
-langid>=1.1.6
+# Anthropic Claude API for translation + language detection
+anthropic>=0.40.0
 
 # Data handling
 pandas>=2.0.0
